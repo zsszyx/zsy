@@ -59,10 +59,10 @@ class BYOL(Frame):
         _ = self.blocks['t_base'](x)
         x = self.base_net(x)
         x = flatten(x)
-        self.blocks['o_projector'] = self.blocks['o_projector'](x.shape[1], 256, 4096)
+        self.blocks['o_projector'] = self.blocks['o_projector'](x.shape[1], 256, 4096)  # 256, 4096
         self.blocks['t_projector'] = self.blocks['t_projector'](x.shape[1], 256, 4096)
         set_requires_grad(self.blocks['t_projector'], False)
-        self.blocks['predict'] = self.blocks['predict'](256, 256, 4096)
+        self.blocks['predict'] = self.blocks['predict'](256, 256, 4096)  # 256,256,4096
         for i in self.blocks.values():
             i.to(self.device)
 
@@ -74,19 +74,27 @@ class BYOL(Frame):
             0] == 1), '投影层中的batchnorm，训练时必须有大于1个样本'
         # 数据增强
         image_one, image_two = self.augments['default'](x), self.augments['r_erasing'](x)
-
-        online_proj_one, _ = self.blocks['o_projector'](image_one)
-        online_proj_two, _ = self.blocks['o_projector'](image_two)
-
+        online_extract_one = self.base_net(image_one)
+        online_extract_two = self.base_net(image_two)
+        online_extract_one = flatten(online_extract_one)
+        online_extract_two = flatten(online_extract_two)
+        online_proj_one = self.blocks['o_projector'](online_extract_one)
+        online_proj_two = self.blocks['o_projector'](online_extract_two)
         online_pred_one = self.blocks['predict'](online_proj_one)
         online_pred_two = self.blocks['predict'](online_proj_two)
 
         # 禁用梯度计算的上下文管理器。
         with torch.no_grad():
             # 更具是否动量更新决定权重迁移方式
-            target_encoder = self.ema.update_average(self['t_projector'], self['o_projector'])
-            target_proj_one = target_encoder(image_one)
-            target_proj_two = target_encoder(image_two)
+            target_base = self.ema.update_average(self.blocks['t_base'], self.base_net)
+            target_encoder = self.ema.update_average(self.blocks['t_projector'], self.blocks['o_projector'])
+            x1 = target_base(image_one)
+            x2 = target_base(image_two)
+            x1 = flatten(x1)
+            x2 = flatten(x2)
+            target_proj_one = target_encoder(x1)
+            target_proj_two = target_encoder(x2)
+
             # 其实就相当于变量之间的关系本来是x -> m -> y,这里的叶子tensor是x，但是这个时候对m进行了m.detach_()操作,其实就是进行了两个操作：
             # 将m的grad_fn的值设置为None,这样m就不会再与前一个节点x关联，这里的关系就会变成x, m -> y,此时的m就变成了叶子结点
             # 然后会将m的requires_grad设置为False，这样对y进行backward()时就不会求m的梯度

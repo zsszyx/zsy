@@ -89,7 +89,7 @@ class Frame(nn.Module):
         self.training = False
         self.back_embedding = True
         if back_net:
-            self.base_net.load_state_dict(torch.load(f'{self.base_path + " " + str(epoch)}.pt'))
+            self.base_net.load_state_dict(torch.load(f'{self.base_path + " " + str(epoch)}-net.pt'))
             return self.base_net
 
     def set_train(self):
@@ -106,8 +106,8 @@ class Frame(nn.Module):
     def load_frame(self, epoch=0):
         self.load_state_dict(torch.load(f'{self.frame_path + " " + str(epoch)}-net.pt'))
 
-    def save_test(self, epoch=0):
-        return f'{self.test_path + " " + str(epoch)}.xlsx'
+    def test_path_return(self, epoch=0, data=None):
+        return f'{self.test_path + data + str(epoch)}.xlsx'
 
 
 # --------------------------------------------------------------------------------------------------------

@@ -28,7 +28,7 @@ def train(data_loader, epoch, frame, opt, labeled=True, data_flag=0):
             opt.step()
             step += 1
             if step % 50 == 0:
-                print(f'epoch:{i}, step{step}')
+                print(f'epoch:{i+1}, step{step}')
 
         # save your improved network
         if (i + 1) % 20 == 0:

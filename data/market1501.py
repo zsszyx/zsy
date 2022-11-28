@@ -10,9 +10,11 @@ from torch.utils.data import Dataset
 import numpy as np
 from PIL import Image
 
-train_path = 'Market-1501-v15.09.15/bounding_box_train'
-query_path = 'Market-1501-v15.09.15/query'
-gallery_path = 'Market-1501-v15.09.15/bounding_box_test'
+# now = os.getcwd()
+# print(now)
+train_path = 'data/Market-1501-v15.09.15/bounding_box_train'
+query_path = 'data/Market-1501-v15.09.15/query'
+gallery_path = 'data/Market-1501-v15.09.15/bounding_box_test'
 
 
 class Market1501(Dataset):

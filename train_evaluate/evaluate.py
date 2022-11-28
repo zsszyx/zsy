@@ -4,6 +4,7 @@ import torch.utils.data as tua
 import pandas as pd
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 
 
 #######################################################################
@@ -74,10 +75,10 @@ def _compute_mAP(index, good_index, junk_index):
 
 ######################################################################
 def _extract(model, qd, gd, path):
-    # model.to(device)
     l1 = len(qd)
     l2 = len(gd)
     # 本来应该是64
+    # model.to(device)
     query_dataset = tua.DataLoader(dataset=qd, batch_size=64, shuffle=True, drop_last=False)
     gallery_dataset = tua.DataLoader(dataset=gd, batch_size=64, shuffle=True, drop_last=False)
     gallery_feature = []
@@ -122,7 +123,7 @@ def _extract(model, qd, gd, path):
     result.to_excel(path)
 
 
-def exam(frame, epoch, qd, gd):
+def exam(frame, epoch, qd, gd, dataname):
     test_net = frame.embedding_only(back_net=True, epoch=epoch)
-    path = frame.save_test(epoch)
+    path = frame.test_path_return(epoch, dataname)
     _extract(test_net, qd, gd, path)
